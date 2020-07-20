@@ -45,7 +45,7 @@ select price
 from printer)t2)
 
 
-
+#5
 select distinct product.maker from product
 where model in (Select model from pc
 where ram = (select min(ram) from pc) and speed = (select max(speed) from pc where ram = (select min(ram) from pc) )
@@ -55,7 +55,12 @@ FROM product
 WHERE type='printer'
 )
 
-
-
+#6
+SELECT AVG(price) AS AVG_price FROM (SELECT model, price FROM PC
+UNION ALL
+SELECT model, price FROM Laptop) AS price
+INNER JOIN Product AS p
+ON price.model = p.model
+WHERE maker = 'A'
 
 
