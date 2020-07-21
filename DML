@@ -1,0 +1,25 @@
+#1
+delete from laptop
+where model not in(select model from product where maker in (select maker from product where type = 'printer'))
+
+#2
+Delete From Classes
+Where class not in 
+(select t.class 
+	From
+	(
+	Select class, count(class) numb
+	From Ships
+	Group by class
+	Union All
+	Select ship class, count(ship) numb
+	From outcomes
+	Where ship not in (
+	Select name 
+	from Ships)
+	Group by ship
+        ) t
+Group by t.class
+Having sum(t.numb)>=3
+)
+
