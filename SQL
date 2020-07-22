@@ -56,9 +56,16 @@ WHERE type='printer'
 )
 
 #6
-SELECT AVG(price) AS AVG_price FROM (SELECT model, price FROM PC
-UNION ALL
-SELECT model, price FROM Laptop) AS price
-INNER JOIN Product AS p
-ON price.model = p.model
-WHERE maker = 'A'
+select avg(price) as avg_price from (select model, price from PC
+union all
+SELECT model, price from Laptop) as price
+inner join Product as p
+on price.model = p.model
+where maker = 'A'
+
+#7
+select maker,avg(hd)  from product 
+inner join pc 
+on product.model=pc.model   
+where maker in (select maker from product where type = 'Printer')
+GROUP BY maker
