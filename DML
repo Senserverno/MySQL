@@ -1,8 +1,58 @@
 #1
+insert into PC(code,model,speed,ram,hd,cd,price) values 
+('20','2111','950','512','60','52x','1100');
+
+#2
+insert into pc (code, model, speed, ram, hd, price)
+select min (code)+20,
+model + 1000,
+max (speed),
+max (ram)*2,
+max (hd)*2,
+max  (price)/1.5
+from laptop GROUP BY model
+
+#4
+delete from laptop
+where model not in (select model from product where 
+maker in (select maker from product where type = 'printer'))
+
+#5
+update laptop
+set screen = screen + 1,
+price = price - 100
+from laptop
+inner join product
+on product.model = laptop.model
+where maker in('E','B')
+
+#6
+insert into Outcomes(ship,battle,result)
+values ('Rodney',
+(select name from battles where date = '1944-10-25'),'sunk'),
+('Nelson',
+(select name from battles where date = '1945-01-28'),'damaged')
+
+#7
 delete from laptop
 where model not in(select model from product where maker in (select maker from product where type = 'printer'))
 
-#2
+#8
+delete  from product
+where model not in(select model from pc
+union all
+select model from printer
+union all
+select model from laptop)
+
+#9
+delete from pc
+where hd in
+(select distinct top 3 hd
+from pc
+order by hd asc)
+
+#10
 Delete From Classes
 Where class not in 
 (select t.class 
