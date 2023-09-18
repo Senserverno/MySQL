@@ -1,0 +1,46 @@
+#1 В таблице с платежами из-за технической ошибки возникли задвоения. 
+Необходимо написать запрос, возвращающий данные из таблицы платежей без дубликатов платежей в рамках дня. Платеж считается дублированным, если у него совпадают: дата, тип и сумма. (Время в таблице может отличатся, но если остальные компоненты совпадают, то это дубль. Оставаить необходимо запись с минимальным временем за дату) 
+
+select * from (
+Select id_contract,date(dt_payment),type_payment,amt_payment, row_number() 
+OVER(partition by date(dt_payment) ORDER BY dt_payment asc) as RN from mysql_test_b)
+as t
+where RN = 1
+
+
+#2
+Написать запрос для формирования данных с винтажами доли погасивших по кол-ву и по сумме к 30, 60, 90 дню от даты старта просрочки в разрезе месяца начала эпизода просрочки.
+
+
+SELECT count(a.id_contract) numb_cont, 
+count( CASE WHEN dt_end_ep <= date_add(dt_start_ep,INTERVAL 30 DAY)   then 1 end) as 30_days,
+count( CASE WHEN dt_end_ep <= date_add(dt_start_ep,INTERVAL 60 DAY) and dt_end_ep > date_add(dt_start_ep,INTERVAL 30 DAY) then 1 end) as 60_days,
+count( CASE WHEN dt_end_ep <= date_add(dt_start_ep,INTERVAL 90 DAY) and dt_end_ep > date_add(dt_start_ep,INTERVAL 60 DAY) then 1 end) as 90_days,
+sum(amt_overdue) as amt_sum,
+sum(CASE WHEN dt_end_ep <= date_add(dt_start_ep,INTERVAL 30 DAY) 
+        THEN amt_overdue 
+            ELSE 0 
+        END) AS 30_day_amt,
+        
+sum(CASE WHEN dt_end_ep <= date_add(dt_start_ep,INTERVAL 60 DAY) and dt_end_ep > date_add(dt_start_ep,INTERVAL 30 DAY)
+                THEN amt_overdue 
+                ELSE 0 
+            END) AS 60_day_amt,
+sum(CASE WHEN dt_end_ep <= date_add(dt_start_ep,INTERVAL 90 DAY) and dt_end_ep > date_add(dt_start_ep,INTERVAL 60 DAY)
+            THEN amt_overdue 
+            ELSE 0 
+        END) AS 90_day_amt,
+
+SUM(CASE WHEN dt_end_ep <= DATE_ADD(dt_start_ep, INTERVAL 30 DAY) THEN amt_overdue ELSE 0 END) / sum(amt_overdue) AS share_30_days,
+SUM(CASE WHEN dt_end_ep <= DATE_ADD(dt_start_ep, INTERVAL 60 DAY) and dt_end_ep > date_add(dt_start_ep,INTERVAL 30 DAY) THEN amt_overdue ELSE 0 END) / sum(amt_overdue) AS share_60_days,
+SUM(CASE WHEN dt_end_ep <= DATE_ADD(dt_start_ep, INTERVAL 90 DAY) and dt_end_ep > date_add(dt_start_ep,INTERVAL 60 DAY) THEN amt_overdue ELSE 0 END) / sum(amt_overdue) AS share_90_days,
+
+count( CASE WHEN dt_end_ep <= date_add(dt_start_ep,INTERVAL 30 DAY) THEN 1 END) / count(*) AS quant_30_share,
+count( CASE WHEN dt_end_ep <= date_add(dt_start_ep,INTERVAL 60 DAY) and dt_end_ep > date_add(dt_start_ep,INTERVAL 30 DAY) then 1 end) / count(*) AS quant_60_share,
+count( CASE WHEN dt_end_ep <= date_add(dt_start_ep,INTERVAL 90 DAY) and dt_end_ep > date_add(dt_start_ep,INTERVAL 60 DAY) then 1 end) / count(*) AS quant_90_share,
+
+SUM(CASE WHEN dt_end_ep <= DATE_ADD(dt_start_ep, INTERVAL 30 DAY) THEN amt_payment ELSE 0 END) AS pay_am_30_days,
+SUM(CASE WHEN dt_end_ep <= DATE_ADD(dt_start_ep, INTERVAL 60 DAY) and dt_end_ep > date_add(dt_start_ep,INTERVAL 30 DAY) THEN amt_payment ELSE 0 END)  AS pay_am_60_days,
+SUM(CASE WHEN dt_end_ep <= DATE_ADD(dt_start_ep, INTERVAL 90 DAY) and dt_end_ep > date_add(dt_start_ep,INTERVAL 60 DAY) THEN amt_payment ELSE 0 END)  AS pay_am_90_days
+
+from mysql_test_a as a inner join mysql_test_b as b ON a.id_contract=b.id_contract
